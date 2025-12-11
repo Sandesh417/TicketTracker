@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: ticket_backend
+    restart: always
+    env_file: ./backend/.env
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app  # For code hot-reload during development
+      - /app/node_modules  # Prevent node_modules from being overwritten
+      - ticket-db-data:/app/data  # Named volume for database persistence
+    stop_grace_period: 10s  # Allows time for WAL checkpoint on shutdown
+
+  frontend:
+    build: ./frontend
+    container_name: ticket_frontend
+    restart: always
+    ports:
+      - "5174:80"
+    environment:
+      - VITE_API_BASE=http://localhost:3001/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  ticket-db-data:  
